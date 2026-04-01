@@ -1,0 +1,17 @@
+SKU,Product,Category,Current_Stock,Weekly_Demand,Lead_Time_Days,Reorder_Point,Unit_Cost
+GPU001,NVIDIA H100 80GB,GPU,45,12,180,20,25000
+GPU002,NVIDIA A100 40GB,GPU,30,8,150,15,15000
+GPU003,NVIDIA L40S 48GB,GPU,60,15,120,25,10000
+GPU004,AMD MI300X,GPU,20,6,160,12,18000
+SRV001,Dell PowerEdge R760,Server,25,5,90,10,8000
+SRV002,HPE ProLiant DL380,Server,40,8,75,15,6000
+SRV003,Supermicro 4U GPU Server,Server,15,4,100,8,12000
+NET001,Arista 400G Switch,Networking,50,6,60,20,4000
+NET002,Mellanox InfiniBand HDR,Networking,35,5,45,15,3500
+NET003,Cisco Nexus 9000,Networking,28,4,55,12,5000
+STR001,Pure Storage FlashArray,Storage,20,3,80,8,20000
+STR002,NetApp AFF A900,Storage,15,2,90,6,25000
+COL001,Cooling Distribution Unit,Cooling,30,3,120,10,8000
+COL002,Precision Air Handler,Cooling,22,2,100,8,6000
+PWR001,APC Smart UPS 10kVA,Power,18,2,75,6,5000
+PWR002,Vertiv Power Distribution,Power,25,3,85,10,4000
