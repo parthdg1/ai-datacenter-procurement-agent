@@ -1,136 +1,115 @@
-# 🖥️ AI Data Center Procurement Risk Agent
+🖥️ AI Data Center Procurement Risk Agent
 
-An AI-powered procurement risk agent for data center hardware planning. 
-Built for supply chain and infrastructure PM roles at AI-first companies 
-like NVIDIA, Google, and AWS.
+An AI-powered procurement and deployment readiness tool for data center hardware planning.
 
-## 🚨 The Problem
+Built to simulate how supply chain risk across GPUs, servers, networking, storage, cooling, and power infrastructure can affect AI cluster deployment.
 
-GPU lead times are 150–180 days. AI infrastructure demand is growing 8%+ 
-weekly. Traditional flat-line inventory planning breaks down completely 
-in this environment.
+🚨 Business Problem
 
-One missed reorder signal = delayed cluster deployment = millions in lost 
-compute capacity.
+AI infrastructure teams depend on long-lead-time hardware such as GPUs, servers, networking gear, and cooling systems. A delay in even one component category can delay cluster deployment, reduce available compute capacity, and slow infrastructure expansion.
 
-## 💡 The Solution
+Traditional inventory planning tools usually stop at SKU-level reorder signals. They do not clearly show which hardware categories are most likely to block deployment readiness.
 
-An agentic AI system that:
-- Scrapes **live news** (NVIDIA supply updates, semiconductor shortages, 
-  hyperscaler expansions)
-- Extracts **demand signals** using LLM reasoning
-- Runs **3-scenario capacity forecasts** (base, optimistic, pessimistic)
-- Flags **critical procurement risks** before they become outages
-- Answers **natural language questions** about your hardware portfolio
-- Generates **structured action plans** for procurement and capacity teams
+💡 Solution
 
-## 🏗️ Architecture
-```
+This project combines deterministic supply chain analytics with LLM-based reasoning to:
+
+classify procurement risk at the SKU level
+estimate shortage exposure and reorder requirements
+project 12-week capacity scenarios using market/news signals
+identify category-level deployment blockers
+answer natural language procurement questions
+generate executive summaries and action plans
+🏗️ Architecture
 data.csv → tools.py → agent.py → app.py
-                ↑          ↑
-          llm_helper.py    |
-                ↑          |
-          Live News API ───┘
-```
+                ↑
+           llm_helper.py
 
-- **tools.py** — deterministic supply chain calculations (metrics, risk 
-  classification, scenario forecasting, news fetching)
-- **llm_helper.py** — LLM reasoning layer (executive summaries, action 
-  plans, natural language Q&A)
-- **agent.py** — intelligent routing layer (decides which tool to use 
-  based on user intent)
-- **app.py** — Streamlit dashboard UI
+tools.py
+Deterministic supply chain calculations such as demand metrics, risk classification, shortage cost calculations, capacity forecasting, and news fetching.
 
-## ✨ Features
+llm_helper.py
+LLM reasoning layer responsible for executive summaries, action plans, category insights, and natural language Q&A.
 
-- 📰 Live news signal extraction via Google News RSS + Groq LLM
-- 📊 3-scenario capacity forecasting (base / optimistic / pessimistic)
-- 🚨 Risk classification (Critical / High / Medium / Low)
-- 💰 Shortage cost exposure calculation
-- 📦 Reorder quantity recommendations
-- 💬 Natural language procurement queries
-- ⚡ Structured action plans (immediate + quarterly)
-- 📋 Executive-ready summaries
-- ⬇️ CSV report downloads
+agent.py
+Routing layer that determines which tool or reasoning function should be used based on the user's question.
 
-## 🛠️ Tech Stack
+app.py
+Streamlit dashboard UI that visualizes supply chain risk, capacity forecasts, and deployment readiness.
 
-- Python 3.8+
-- Groq API (Llama 3.3 70B)
-- Streamlit
-- Pandas
-- NumPy
-- Matplotlib
-- Feedparser
-
-## 🚀 How to Run
-
-**1. Clone the repo:**
-```bash
+✨ Features
+Live news signal extraction via Google News RSS + Groq LLM
+3-scenario capacity forecasting (base / optimistic / pessimistic)
+Procurement risk classification (Critical / High / Medium / Low)
+Shortage cost exposure calculation
+Reorder quantity recommendations
+Cluster deployment readiness analysis identifying hardware categories that may block AI cluster deployment
+Natural language procurement queries through an agent router
+Structured action plans for procurement and capacity teams
+Executive-ready summaries for leadership reviews
+CSV report downloads
+🛠️ Tech Stack
+Python
+Streamlit
+Pandas
+NumPy
+Matplotlib
+Groq API (Llama 3.3 70B)
+Feedparser
+🚀 How to Run
+1. Clone the repository
 git clone https://github.com/YOUR_USERNAME/ai-datacenter-agent.git
 cd ai-datacenter-agent
-```
-
-**2. Create and activate virtual environment:**
-```bash
+2. Create and activate a virtual environment
 python -m venv venv
 source venv/bin/activate
-```
-
-**3. Install dependencies:**
-```bash
+3. Install dependencies
 pip install -r requirements.txt
-```
+4. Set the Groq API key
+export GROQ_API_KEY="your-groq-key"
 
-**4. Set your Groq API key:**
-```bash
-export GROQ_API_KEY="your-groq-key-here"
-```
-Get a free key at [console.groq.com](https://console.groq.com)
+You can obtain a free API key at:
+https://console.groq.com
 
-**5. Run the app:**
-```bash
+5. Run the application
 python -m streamlit run app.py
-```
+📊 Example Questions to Ask the Agent
+Question	Description
+Which items are critical?	Shows hardware with critical or high procurement risk
+Give me an action plan	Generates structured immediate and quarterly procurement actions
+Analyze GPU vs server risk	Provides category-level risk insights
+What is blocking cluster deployment?	Identifies infrastructure categories that may delay cluster readiness
+Give me an executive summary	Produces a leadership-ready procurement summary
+What should we reorder first?	Prioritized procurement recommendations
+🏢 Relevance to Infrastructure & Supply Chain Roles
 
-**6. Use the app:**
-- Check "Use sample inventory data" to load demo data
-- Click "Refresh News" to fetch live signals
-- Ask questions like:
-  - "Which GPUs are critical?"
-  - "Give me an action plan"
-  - "Analyze server vs networking risk"
-  - "Give me an executive summary"
+This project demonstrates capabilities relevant to:
 
-## 📊 Sample Questions to Ask the Agent
+Supply Chain Program Managers
+Logistics Program Managers
+Infrastructure Capacity Planning teams
+Data Center Deployment teams
 
-| Question | What it does |
-|----------|-------------|
-| "Which items are critical?" | Shows Critical/High risk hardware |
-| "Give me an action plan" | Structured immediate + quarterly actions |
-| "Analyze GPU vs server risk" | Category level insights |
-| "Give me an executive summary" | Full procurement brief |
-| "What should I reorder first?" | Prioritized reorder recommendations |
+Key skills showcased include:
 
-## 🏢 Relevance to Data Center PM Roles
+Supply chain analytics and demand modeling
+Procurement risk management
+Infrastructure deployment awareness
+LLM-assisted decision support
+Data visualization and executive reporting
+👤 About
 
-This project demonstrates:
-- **Supply chain domain expertise** — lead time modeling, reorder logic, 
-  shortage cost calculation
-- **AI integration** — LLM-powered reasoning over real inventory data
-- **Agentic architecture** — intelligent routing between deterministic 
-  tools and LLM functions
-- **Real-time signal processing** — live news extraction and forecast 
-  adjustment
-- **Executive communication** — dashboard designed for VP/Director 
-  level audiences
+Built by Parth Gandhi
 
-## 👤 About
+Industrial & Systems Engineer with 5+ years of experience in supply chain analytics, demand planning, and operations optimization.
 
-Built by **Parth Gandhi** — Supply Chain Professional with 5+ years 
-experience in demand planning, S&OP, and inventory management.
+Certifications:
+APICS CSCP
+AWS Cloud Practitioner
+Certified Six Sigma Black Belt (CSSBB)
 
-APICS CSCP | AWS Cloud Practitioner | CSSBB | Lean Six Sigma Black Belt
+LinkedIn:
+https://linkedin.com/in/parthdgandhi
 
-[LinkedIn](https://linkedin.com/in/parthdgandhi) | 
-[Email](mailto:parthdgandhi1@gmail.com)
+Email:
+parthdgandhi1@gmail.com
