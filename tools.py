@@ -229,3 +229,83 @@ def summarize_category_risk(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     return category_df
+
+def get_cluster_readiness_report(risk_df: pd.DataFrame, capacity_df: pd.DataFrame):
+    """
+    Roll SKU-level procurement risk and scenario-based capacity risk up to the
+    category level so the dashboard can answer: what is blocking cluster go-live?
+    """
+    blocker_df = (
+        capacity_df.groupby("Category")
+        .agg(
+            total_skus=("SKU", "count"),
+            shortfall_skus=("capacity_risk", lambda x: (x == "Capacity Shortfall").sum()),
+            pessimistic_shortfall_skus=("pessimistic_stock", lambda x: (x < 0).sum()),
+            avg_weeks_of_cover=("weeks_of_cover", "mean"),
+            projected_base_stock=("base_stock", "sum"),
+            projected_pessimistic_stock=("pessimistic_stock", "sum"),
+        )
+        .reset_index()
+    )
+
+    procurement_df = (
+        risk_df.groupby("Category")
+        .agg(
+            critical_procurement_skus=("risk_level", lambda x: (x == "Critical").sum()),
+            high_procurement_skus=("risk_level", lambda x: (x == "High").sum()),
+            shortage_cost=("shortage_cost", "sum"),
+        )
+        .reset_index()
+    )
+
+    blocker_df = blocker_df.merge(procurement_df, on="Category", how="left").fillna(0)
+
+    def classify_blocker(row):
+        reasons = []
+        status = "No"
+
+        if row["critical_procurement_skus"] > 0:
+            status = "Yes"
+            reasons.append("critical procurement exposure")
+
+        if row["shortfall_skus"] > 0:
+            status = "Yes"
+            reasons.append("base-case capacity shortfall")
+
+        if status != "Yes" and row["pessimistic_shortfall_skus"] > 0:
+            status = "Watch"
+            reasons.append("pessimistic scenario shortfall")
+
+        if status == "No" and row["avg_weeks_of_cover"] < 4:
+            status = "Watch"
+            reasons.append("low weeks of cover")
+
+        if not reasons:
+            reasons.append("no near-term deployment blocker")
+
+        return pd.Series([status, "; ".join(reasons)])
+
+    blocker_df[["is_blocker", "blocker_reason"]] = blocker_df.apply(classify_blocker, axis=1)
+
+    blocker_df = blocker_df.sort_values(
+        by=["is_blocker", "shortage_cost", "projected_pessimistic_stock"],
+        ascending=[True, False, True],
+        key=lambda s: s.map({"Yes": 0, "Watch": 1, "No": 2}) if s.name == "is_blocker" else s,
+    ).reset_index(drop=True)
+
+    blockers_only = blocker_df[blocker_df["is_blocker"] == "Yes"]
+    watchlist = blocker_df[blocker_df["is_blocker"] == "Watch"]
+    highest_risk_category = blocker_df.iloc[0]["Category"] if not blocker_df.empty else "None"
+
+    summary = {
+        "blocking_categories": int(len(blockers_only)),
+        "watchlist_categories": int(len(watchlist)),
+        "highest_risk_category": highest_risk_category,
+        "headline": (
+            "Cluster deployment is currently exposed by " + ", ".join(blockers_only["Category"].tolist())
+            if not blockers_only.empty
+            else "No immediate category-level deployment blocker identified."
+        ),
+    }
+
+    return summary, blocker_df

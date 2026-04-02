@@ -146,7 +146,16 @@ if file_to_use is not None:
         ax2.set_ylabel("Projected Units Remaining")
         ax2.legend()
         st.pyplot(fig2)
+        
+        st.subheader("🚧 Cluster Readiness")
+        readiness = dashboard["cluster_readiness_summary"]
 
+        r1, r2, r3 = st.columns(3)
+        r1.metric("Blocking Categories", readiness["blocking_categories"])
+        r2.metric("Watchlist Categories", readiness["watchlist_categories"])
+        r3.metric("Highest-Risk Category", readiness["highest_risk_category"])
+
+        st.warning(readiness["headline"])
     # Executive summary section
     st.subheader("📋 Executive Summary")
     
@@ -173,13 +182,14 @@ if file_to_use is not None:
         f"Market insight: {signals.get('key_insight', 'No insight available')}"
     ]
     
+
     for line in summary_lines:
         st.write(f"- {line}")
 
     # Download buttons
     st.subheader("⬇️ Download Reports")
     
-    dl1, dl2, dl3 = st.columns(3)
+    dl1, dl2, dl3, dl4 = st.columns(4)
     
     with dl1:
         st.download_button(
@@ -203,6 +213,13 @@ if file_to_use is not None:
             mime="text/csv"
         )
 
+    with dl4:
+        st.download_button(
+            label="Download Blocker View",
+            data=dashboard["deployment_blockers"].to_csv(index=False).encode("utf-8"),
+            file_name="deployment_blockers.csv",
+            mime="text/csv"
+        )    
     # Data tables
     st.subheader("🗂️ Full Inventory Risk Table")
     st.dataframe(dashboard["full_data"], use_container_width=True)
@@ -213,6 +230,25 @@ if file_to_use is not None:
     st.subheader("📦 Reorder Recommendations")
     st.dataframe(dashboard["reorder_recommendations"], use_container_width=True)
 
+    st.subheader("🚧 Deployment Blockers by Category")
+    st.caption("Categories flagged here are the ones most likely to delay cluster go-live.")
+
+    blocker_cols = [
+    "Category",
+    "is_blocker",
+    "blocker_reason",
+    "shortfall_skus",
+    "critical_procurement_skus",
+    "high_procurement_skus",
+    "avg_weeks_of_cover",
+    "projected_pessimistic_stock",
+    "shortage_cost",
+    ]
+
+    st.dataframe(
+    dashboard["deployment_blockers"][blocker_cols],
+    use_container_width=True
+    )
     # Capacity projection table
     st.subheader("🔮 12-Week Capacity Projection")
     st.caption("Based on live news signals and scenario forecasting")
@@ -230,7 +266,7 @@ if file_to_use is not None:
 
     # Ask the agent section
     st.subheader("💬 Ask the Agent")
-    st.caption("Try: Which GPUs are critical? / Give me an action plan / Analyze server vs networking risk")
+    st.caption("Try: Which GPUs are critical? / Give me an action plan / What is blocking cluster deployment?")
     
     user_question = st.text_input("Ask a procurement question:")
     

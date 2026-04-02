@@ -9,7 +9,8 @@ from tools import (
     prepare_context_table,
     project_capacity_with_news,
     fetch_datacenter_news,
-    extract_news_signals
+    extract_news_signals,
+    get_cluster_readiness_report,
 )
 from llm_helper import (
     generate_exec_summary,
@@ -27,6 +28,7 @@ class DataCenterProcurementAgent:
         self.raw_df = load_hardware_data(file)
         self.metrics_df = calculate_procurement_metrics(self.raw_df)
         self.risk_df = classify_procurement_risk(self.metrics_df)
+        
 
         # Default news signals before user refreshes
         self.news_signals = {
@@ -42,17 +44,36 @@ class DataCenterProcurementAgent:
 
         # Capacity projection using default signals
         self.capacity_df = project_capacity_with_news(self.raw_df, self.news_signals)
+        self.cluster_readiness_summary, self.deployment_blockers_df = get_cluster_readiness_report(self.risk_df, self.capacity_df)
 
     def refresh_news(self):
         """Fetches live news and updates signals and capacity projections"""
         articles = fetch_datacenter_news()
         self.news_signals = extract_news_signals(articles)
         self.capacity_df = project_capacity_with_news(self.raw_df, self.news_signals)
+        self.cluster_readiness_summary, self.deployment_blockers_df = get_cluster_readiness_report(self.risk_df, self.capacity_df)
         return self.news_signals
+
+    
 
     def route(self, user_question: str) -> dict:
         q = user_question.lower()
 
+        if any(word in q for word in ["block", "readiness", "go-live", "cluster deployment", "deployment"]):
+            blockers = self.deployment_blockers_df[self.deployment_blockers_df["is_blocker"].isin(["Yes", "Watch"])].copy()
+
+            if blockers.empty:
+                text = "No immediate deployment blocker is visible at the category level right now."
+            else:
+                text = self.cluster_readiness_summary["headline"]
+
+            return {
+            "tool_used": "get_cluster_readiness_report",
+            "data": blockers,
+            "text": text,
+            "action_plan": None,
+        }
+        
         # Action plan routing
         if any(word in q for word in ["action", "plan", "what should i do", "next steps"]):
             critical_df = get_critical_items(self.risk_df)
@@ -170,5 +191,7 @@ class DataCenterProcurementAgent:
             "critical_items": get_critical_items(self.risk_df),
             "reorder_recommendations": get_reorder_recommendations(self.risk_df),
             "capacity_view": self.capacity_df,
-            "news_signals": self.news_signals
+            "news_signals": self.news_signals,
+            "cluster_readiness_summary": self.cluster_readiness_summary,
+            "deployment_blockers": self.deployment_blockers_df
         }
